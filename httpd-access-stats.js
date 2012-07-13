@@ -6,15 +6,15 @@ var config = {
 	contentSplitDelim : "\n",
 	ipPattern : /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/,
 	filesPattern : /^.*\"GET (.*) HTTP\/1\.1"/g,
-	logFileRoot : "/home/ryan/Desktop/logs/",
-	logFiles : [ "example.com-access.log", "www.farmingdale.edu-ssl-access.log" ],
+	logFileRoot : "/var/log/httpd/"
+	logFiles : [ "example.com-access.log" ],
 	logFileEncoding : "utf-8",
 	documentRoot : "/var/www/vhosts/",
 	ipForAccess : "127.0.0.1",
-	showSourceCounts : false,
-	showFileRequestCounts : false,
+	showSourceCounts : true,
+	showFileRequestCounts : true,
 	checkFileSizes : false, /* Only enable when running this script on the web server itself, and do so with extreme caution */
-	showAccessByIp : true
+	showAccessByIp : false
 };
 
 // Empty dataset to store results in
