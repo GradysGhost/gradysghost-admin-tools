@@ -6,20 +6,23 @@ var config = {
 	contentSplitDelim : "\n",
 	ipPattern : /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/,
 	filesPattern : /^.*\"GET (.*) HTTP\/1\.1"/g,
-	logFileRoot : "/home/ryan/Desktop/gradysghost-admin-tools/",
-	logFiles : [ "test-data.log" ],
+	logFileRoot : "/home/ryan/Desktop/logs/",
+	logFiles : [ "example.com-access.log", "www.farmingdale.edu-ssl-access.log" ],
 	logFileEncoding : "utf-8",
 	documentRoot : "/var/www/vhosts/",
-	showSourceCounts : true,
+	ipForAccess : "127.0.0.1",
+	showSourceCounts : false,
 	showFileRequestCounts : false,
-	checkFileSizes : false
+	checkFileSizes : false, /* Only enable when running this script on the web server itself, and do so with extreme caution */
+	showAccessByIp : true
 };
 
 // Empty dataset to store results in
 var results = {
 	content : "",
 	ips : {},
-	files : {}
+	files : {},
+	requests : {}
 };
 
 // Init
@@ -83,6 +86,13 @@ if (config.showFileRequestCounts) {
 		};
 }
 
+console.log(config.showAccessByIp);
+if (config.showAccessByIp) {
+	for (var i = 0; i < results.content.length; ++i)
+		if (results.content[i].search(config.ipForAccess) >= 0)
+			results.requests[i] = results.content[i];
+}
+
 
 // Output
 
@@ -98,4 +108,10 @@ if (config.showFileRequestCounts) {
 	for (var i in results.files) {
 		console.log(i + " : " + results.files[i].count);
 	}
+}
+
+if (config.showAccessByIp) {
+	console.log(" * * * ACCESS ENTRIES FOR " + config.ipForAccess + " * * *");
+	for (var i in results.requests)
+		console.log(results.requests[i]);
 }
