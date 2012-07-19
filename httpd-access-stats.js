@@ -86,7 +86,6 @@ if (config.showFileRequestCounts) {
 		};
 }
 
-console.log(config.showAccessByIp);
 if (config.showAccessByIp) {
 	for (var i = 0; i < results.content.length; ++i)
 		if (results.content[i].search(config.ipForAccess) >= 0)
