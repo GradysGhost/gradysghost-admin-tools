@@ -13,9 +13,9 @@ DETECT_STRUCTURES=0
 freshclam
 
 if [ $DETECT_STRUCTURES -eq 1 ]; then
-	clamscan -ril $LOGFILE --detect-structured=yes $SCAN_DIRECTORIES
+	clamscan -ril $LOGFILE --exclude-dir /usr/share/doc/clamav* --detect-structured=yes $SCAN_DIRECTORIES
 else
-	clamscan -ril $LOGFILE $SCAN_DIRECTORIES
+	clamscan -ril $LOGFILE --exclude-dir /usr/share/doc/clamav* $SCAN_DIRECTORIES
 fi
 exitcode=$?
 
