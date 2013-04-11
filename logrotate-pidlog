@@ -1,0 +1,8 @@
+/var/log/pidlog/*log {
+    missingok
+    notifempty
+    sharedscripts
+    compress
+    daily
+    rotate 7
+}
