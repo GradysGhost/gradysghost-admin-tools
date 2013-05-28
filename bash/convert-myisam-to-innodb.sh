@@ -5,7 +5,7 @@ SCHEMA=$1
 mysql -Be "USE $SCHEMA;" &> /dev/null
 EXITCODE=$?
 if [ $EXITCODE -eq 0 ]; then
-	mysql information_schema --skip-column-names -Be 'USE `information_schema`; SELECT `table_name` FROM `TABLES` WHERE `table_schema` = "cityrewardsnetowrk_com_-coupons" AND `engine`="MyISAM";' > /tmp/myisamdbs
+	mysql information_schema --skip-column-names -Be 'USE `information_schema`; SELECT `table_name` FROM `TABLES` WHERE `table_schema` = "$SCHEMA" AND `engine`="MyISAM";' > /tmp/myisamdbs
 	while read TABLE; do
 		echo "Converting table $TABLE..."
 		mysql $SCHEMA -Be "ALTER TABLE $TABLE ENGINE=InnoDB;"
