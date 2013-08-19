@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mysql -Be "
+mysql -Be '
 	SELECT
 		`TABLE_SCHEMA`,
 		`TABLE_NAME`
@@ -8,12 +8,12 @@ mysql -Be "
 		`information_schema`.`TABLES`
 	WHERE
 		`TABLE_SCHEMA` NOT IN (
-			'mysql',
-			'information_schema',
-			'performance_schema'
+			"mysql",
+			"information_schema",
+			"performance_schema"
 		) AND
-		`ENGINE` = 'MyISAM'
+		`ENGINE` = "MyISAM"
 	ORDER BY
 		`TABLE_SCHEMA`,
 		`TABLE_NAME`
-"
+'
