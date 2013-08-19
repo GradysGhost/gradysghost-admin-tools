@@ -2,8 +2,11 @@
 
 mysql -Be '
 	SELECT
-		`TABLE_SCHEMA`,
-		`TABLE_NAME`
+		CONCAT(
+			`TABLE_SCHEMA`,
+			".",
+			`TABLE_NAME`
+		) AS `TABLE`
 	FROM
 		`information_schema`.`TABLES`
 	WHERE
