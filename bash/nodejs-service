@@ -22,6 +22,7 @@ function service_start {
         fi
 
         # No pidfile? Start the service and create the pidfile
+		cd `basepath $SCRIPT`
 		daemon --user=$USER --pidfile=$PIDFILE $NODE $SCRIPT $OPTIONS
 }
 
