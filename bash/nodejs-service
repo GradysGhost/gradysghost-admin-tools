@@ -1,97 +1,99 @@
-#!/bin/bash
-
 # This script is a general purpose Node.js service script. For most
 # cases, you should be able to adjust the variables listed below to
 # match your specific use case.
 
 # Tested on CentOS 6.4
 
-USER="root"
-PIDFILE="/var/run/nodejs-service"
-NODE="/usr/local/bin/node"
-SCRIPT="/opt/nodejs/script.js"
+. /etc/init.d/functions
+
+PIDFILE="/var/run/node-service"
+NODE="/usr/bin/node"
+SCRIPT="/var/www/html/a/nodejs/cisockServer.js"
 SERVICE_NAME="Node.js"
 SVC_SCRIPT_FILE="/etc/init.d/nodejs-service"
 
 # Start the service
 function service_start {
-	# Check for a pidfile
-	if [ -e $PIDFILE ]; then
-		echo "$SERVICE_NAME is already running."
-	fi
-	
-	# No pidfile? Start the service and create the pidfile
-	nohup $NODE $SCRIPT &
-	echo $! > $PIDFILE
+        # Check for a pidfile
+        if [ -e $PIDFILE ]; then
+                echo "$SERVICE_NAME is already running."
+        fi
+
+        # No pidfile? Start the service and create the pidfile
+        nohup $NODE $SCRIPT &
+        echo $! > $PIDFILE
 }
 
 # Stop the service
 function service_stop {
-	# No pidfile? See if there's a node process running. Don't stop it, but
-	# report it to the user for manual intervention
-	if [ ! -e $PIDFILE ]; then
-		$POSSIBLE_PID=`ps aux | grep "$NODE" | grep -v 'grep' | awk '{print $2}'`
-		if [ $POSSIBLE_PID -ne "" ]; then
-			echo "Could not find the correct PID, but process $POSSIBLE_PID might be"
-			echo "an unmanaged version of the process that you want stopped."
-		else
-			echo "Could not find a $SERVICE_NAME process to stop."
-		fi
-	else
-	# Pidfile? Kill the process, delete the pidfile
-		kill `cat $PIDFILE`
-		rm $PIDFILE
-	fi
+        # No pidfile? See if there's a node process running. Don't stop it, but
+        # report it to the user for manual intervention
+        if [ ! -e $PIDFILE ]; then
+                $POSSIBLE_PID=`ps aux | grep "$NODE" | grep -v 'grep' | awk '{print $2}'`
+                if [ $POSSIBLE_PID -ne "" ]; then
+                        echo "Could not find the correct PID, but process $POSSIBLE_PID might be"
+                        echo "an unmanaged version of the process that you want stopped."
+                else
+                        echo "Could not find a $SERVICE_NAME process to stop."
+                fi
+        else
+        # Pidfile? Kill the process, delete the pidfile
+                kill `cat $PIDFILE`
+                rm $PIDFILE
+        fi
 }
 
 # Restart the service
 function service_restart {
-	service_stop
-	service_start
+        service_stop
+        service_start
 }
 
 # Report the service's status
 function service_status {
-	if [ -e $PIDFILE ]; then
-		echo "$SERVICE_NAME is running."
-	else
-		echo "$SERVICE_NAME is stopped."
-	fi
+        if [ -e $PIDFILE ]; then
+                echo "$SERVICE_NAME is running."
+        else
+                echo "$SERVICE_NAME is stopped."
+        fi
 }
 
 # Output usage instructions
 function service_help {
-	echo "To use this script, run $SVC_SCRIPT_FILE followed by one of these"
-	echo "commands:"
-	echo
-	echo " * start"
-	echo " * stop"
-	echo " * restart"
-	echo " * status"
-	echo " * help"
+        echo "To use this script, run $SVC_SCRIPT_FILE followed by one of these"
+        echo "commands:"
+        echo
+        echo " * start"
+        echo " * stop"
+        echo " * restart"
+        echo " * status"
+        echo " * help"
 }
 
 # Output for bad input
 function service_bad_command {
-	echo "Invalid command: $1"
-	echo "I understand: 'start', 'stop', 'restart', 'status', and 'help'"
+        echo "Invalid command: $1"
+        echo "I understand: 'start', 'stop', 'restart', 'status', and 'help'"
 }
 
 # Parse input and respond to it
 case $1 in
 start)
-	service_start
-	;;
+        service_start
+        ;;
 stop)
-	service_stop
-	;;
+        service_stop
+        ;;
 restart)
-	service_restart
-	;;
+        service_restart
+        ;;
 status)
-	service_status
-	;;
+        service_status
+        ;;
+help)
+        service_help
+        ;;
 *)
-	service_bad_command
-	;;
+        service_bad_command
+        ;;
 esac
