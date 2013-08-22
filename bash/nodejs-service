@@ -6,11 +6,13 @@
 
 . /etc/init.d/functions
 
+USER="root"
 PIDFILE="/var/run/node-service"
-NODE="/usr/bin/node"
-SCRIPT="/var/www/html/a/nodejs/cisockServer.js"
-SERVICE_NAME="Node.js"
-SVC_SCRIPT_FILE="/etc/init.d/nodejs-service"
+NODE="/usr/local/bin/node"
+SCRIPT="/opt/nodejs/script.js"
+OPTIONS=""
+SERVICE_NAME="Node.JS"
+SVC_SCRIPT_FILE=$0
 
 # Start the service
 function service_start {
@@ -20,8 +22,7 @@ function service_start {
         fi
 
         # No pidfile? Start the service and create the pidfile
-        nohup $NODE $SCRIPT &
-        echo $! > $PIDFILE
+		daemon --user=$USER --pidfile=$PIDFILE $NODE $SCRIPT $OPTIONS
 }
 
 # Stop the service
