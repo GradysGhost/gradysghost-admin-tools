@@ -1,10 +1,10 @@
 :set nu
 :set ts=4
-:set textwidth=79
+:set expandtab
 :color elflord
 :set cursorline
 :set cursorcolumn
 :set autoindent
 :set colorcolumn=+1
 :hi CursorLine cterm=NONE ctermbg=black
-:hi ColorColumn ctermbg=lightgrey guibg=lightgrey
+:hi CursorColumn ctermbg=lightgrey guibg=lightgrey
