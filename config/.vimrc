@@ -7,4 +7,4 @@
 :set autoindent
 :set colorcolumn=+1
 :hi CursorLine cterm=NONE ctermbg=black
-:hi CursorColumn ctermbg=lightgrey guibg=lightgrey
+:hi CursorColumn ctermbg=black guibg=darkgray
