@@ -1,0 +1,382 @@
+function warn_put_stuff {
+    # Usage:
+    # warn_put_stuff manifest targets
+    #
+    # Where:
+    #  * 'manifest' is a string of one of these forms:
+    #    * '/path/to/source:/path/to/dest/on/targets:owner:group:0644', one
+    #      item per line
+    #    * '@/path/to/manifest', a file that contains a string formatted as
+    #      above
+    #  * 'targets' is a list of host systems to distribute the files in the
+    #    manifest to
+    #
+    # So if you want to send './files/new_sshd_config' to the staging pyweb and
+    # pyws servers, you could try warning the user first with something like
+    # this:
+    #
+    #     MANIFEST='./files/new_sshd_config:/etc/ssh/sshd_config:root:root:0644'
+    #     TARGETS=$(echo host-{1..3}.your.domain)
+    #     warn_put_stuff $MANIFEST $TARGETS
+    #
+    # Need to react to the user's input? Try this instead:
+    #
+    #     CONTINUE=$(warn_put_stuff $MANIFEST $TARGETS)
+    #     if [ $CONTINUTE -eq 0]; then
+    #         # User typed 'y' or 'Y'
+    #     else
+    #         # User typed something other than 'y' or 'Y'
+    #     fi
+    #
+
+    MANIFEST="$1"; shift
+    TARGETS=$@
+
+    if [ "${MANIFEST:0:1}" == "@" ]; then
+        MANIFEST=$(cat ${MANIFEST:1})
+    fi
+
+    echo 1>&2
+    echo '            \         !!!!!!!!!!!         /' 1>&2
+    echo '     -------->        ! WARNING !        <--------' 1>&2
+    echo '            /         !!!!!!!!!!!         \' 1>&2
+    echo 1>&2
+    echo "I will attempt to do exactly as you command me to! Before continuing," 1>&2
+    echo "please review what you've asked me to do before committing to it." 1>&2
+    echo 1>&2
+    echo "You want me to do all of these things:" 1>&2
+    echo 1>&2
+
+    for item in $MANIFEST; do
+        src=$(echo $item | cut -d: -f1)
+        dest=$(echo $item | cut -d: -f2)
+        owner=$(echo $item | cut -d: -f3)
+        group=$(echo $item | cut -d: -f4)
+        mode=$(echo $item | cut -d: -f5)
+
+        echo " - Copy $src to $dest on all the targets." 1>&2
+        echo "   - Change its ownership to $owner:$group" 1>&2
+        echo "   - Change its mode to $mode" 1>&2
+    done
+
+    echo 1>&2
+    echo "The above actions will be taken against all of these targets:" 1>&2
+    echo 1>&2
+
+    for target in $TARGETS; do
+        echo " - $target" 1>&2
+    done
+
+    echo 1>&2
+    read -p "Continue? (y|N)" CONT 1>&2
+
+    if [[ "${CONT:0:1}" == "y" || "${CONT:0:1}" == "Y" ]]; then
+        echo 0
+    else
+        echo 1
+    fi
+}
+
+function put_stuff {
+    # Usage:
+    # put_stuff manifest targets
+    #
+    # Where:
+    #  * 'manifest' is a string of one of these forms:
+    #    * '/path/to/source:/path/to/dest/on/targets:owner:group:0644', one
+    #      item per line
+    #    * '@/path/to/manifest', a file that contains a string formatted as
+    #      above
+    #  * 'targets' is a list of host systems to distribute the files in the
+    #    manifest to
+    #
+    # So if you want to send './files/new_sshd_config' to the staging pyweb and
+    # pyws servers, you could try something like this:
+    #
+    #     MANIFEST='./files/new_sshd_config:/etc/ssh/sshd_config:root:root:0644'
+    #     TARGETS=$(echo host-{1..3}.your.domain)
+    #     put_stuff $MANIFEST $TARGETS
+    #
+
+    MANIFEST="$1"; shift
+    TARGETS=$@
+
+    if [ "${MANIFEST:0:1}" == "@" ]; then
+        MANIFEST=$(cat ${MANIFEST:1})
+    fi
+
+    echo "The putting of things is underway..."
+
+    for target in $TARGETS; do
+        for item in $MANIFEST; do
+
+            src=$(echo $item | cut -d: -f1)
+            dest=$(echo $item | cut -d: -f2)
+            owner=$(echo $item | cut -d: -f3)
+            group=$(echo $item | cut -d: -f4)
+            mode=$(echo $item | cut -d: -f5)
+
+            echo " - Copy $src to $target:$dest"
+            if [ "$DEBUG" == "yes" ]; then
+                scp $src $target:$dest
+            elif [ "$VERBOSE" == "yes" ]; then
+                scp -v $src $target:$dest
+            else
+                scp $src $target:$dest 2>/dev/null
+            fi
+
+            echo " - Set ownership of $target:$dest to $owner:$group"
+            ssh $target "chown $owner:$group $dest"
+
+            echo " - Setting file mode of $target:$dest to $mode"
+            ssh $target "chmod $mode $dest"
+
+        done
+    done
+
+    echo
+}
+
+function get_stuff {
+    # Usage:
+    # get_stuff remote_file local_prefix targets
+    #
+    # Where:
+    #  * 'remote_file' is the path to the file you want to retrieve from the
+    #    targeted systems
+    #  * 'local_prefix' is a string that determines where the files get saved
+    #  * 'targets' is a list of hostnames to gather the files from
+    #
+    # Files will be written to $local_prefix-$t where $t is the hostname of the
+    # target. Therefore, this command...
+    #
+    #     get_stuff /tmp/dummy ~/temp_stuff/dumb- host{1..3}.site.com
+    #
+    # ...generates these local files:
+    #
+    #  * ~/temp_stuff/dumb-host1.site.com
+    #  * ~/temp_stuff/dumb-host2.site.com
+    #  * ~/temp_stuff/dumb-host3.site.com
+    #
+
+    REMOTE_FILE=$1; shift
+    LOCAL_PREFIX=$1; shift
+    TARGETS=$@
+
+    for t in $TARGETS; do
+        if [ "$SUDO" == "yes" ]; then
+            TMP_NAME="/tmp/`date +%s`"
+            ssh $t "sudo cp $REMOTE_FILE $TMP_NAME; sudo chmod 777 $TMP_NAME"
+            if [ "$VERBOSE" == "yes" ]; then
+                scp $t:$TMP_NAME ${LOCAL_PREFIX}${t}
+            else
+                scp $t:$TMP_NAME ${LOCAL_PREFIX}${t} 2>/dev/null
+            fi
+            ssh $t "sudo rm -f $TMP_NAME"
+        else
+            if [ "$VERBOSE" == "yes" ]; then
+                scp $t:$REMOTE_FILE ${LOCAL_PREFIX}${t}
+            else
+                scp $t:$TMP_NAME ${LOCAL_PREFIX}${t} 2>/dev/null
+            fi
+        fi
+    done
+}
+
+function warn_do_stuff {
+    # Usage:
+    # warn_do_stuff stuff_to_do targets
+    #
+    # Where:
+    # * 'stuff_to_do' is a string, BASH commands to be executed on all
+    #   specified targets
+    # * 'targets' is a list of host systems to execute those commands on
+    #
+    # So if you want to delete a temporary file, you could warn your users
+    # first with something like this:
+    #
+    #     SCRIPT="rm -f /tmp/temp.txt"
+    #     TARGETS=$(echo host-{1..3}.your.domain)
+    #     warn_do_stuff "$SCRIPT" $TARGETS
+    #
+    # Need to react to the user's input? Try this instead:
+    #
+    #     CONTINUE=$(warn_do_stuff $MANIFEST $TARGETS)
+    #     if [ $CONTINUTE -eq 0]; then
+    #         # User typed 'y' or 'Y'
+    #     else
+    #         # User typed something other than 'y' or 'Y'
+    #     fi
+    #
+
+    SCRIPT="$1"; shift
+    TARGETS=$@
+
+    echo 1>&2
+    echo '            \         !!!!!!!!!!!         /' 1>&2
+    echo '     -------->        ! WARNING !        <--------' 1>&2
+    echo '            /         !!!!!!!!!!!         \' 1>&2
+    echo 1>&2
+    echo "You want me to run this script..." 1>&2
+    echo 1>&2
+    echo "$SCRIPT" 1>&2
+    echo 1>&2
+    echo "...and you want me to run it on all of these targets:" 1>&2
+    echo 1>&2
+
+    for target in $TARGETS; do
+        echo " - $target" 1>&2
+    done
+
+    echo 1>&2
+
+    read -p "Continue? (y|N)" CONT
+
+    if [[ "${CONT:0:1}" == "y" || "${CONT:0:1}" == "Y" ]]; then
+        echo 0
+    else
+        echo 1
+    fi
+}
+
+function do_stuff {
+    # Usage:
+    # do_stuff stuff_to_do targets
+    #
+    # Where:
+    # * 'stuff_to_do' is a string, BASH commands to be executed on all
+    #   specified targets
+    # * 'targets' is a list of host systems to execute those commands on
+    #
+    # So if you want to delete a temporary file, you could run:
+    #
+    #     SCRIPT="rm -f /tmp/temp.txt"
+    #     TARGETS=$(echo host-{1..3}.your.domain)
+    #     do_stuff "$SCRIPT" $TARGETS
+    #
+
+    SCRIPT="$1"; shift
+    TARGETS=$@
+
+    echo "Running the script on" 1>&2
+
+    for target in $TARGETS; do
+        echo " - $target" 1>&2
+        ssh $target "$SCRIPT" 2>&1
+    done
+
+    echo 1>&2
+}
+
+function filtered_do_stuff {
+    # Usage:
+    #     filtered_do_stuff $SCRIPT $TARGETS
+    #
+    # Prints to stdout the output of the underlying SSH commands without
+    # any of the progress output of the do_stuff function
+    #
+
+    SCRIPT=$1; shift
+    TARGETS=$@
+
+    if [ "$DEBUG" == "yes" ]; then
+        echo "Targets: ${TARGETS[@]}" 1>&2
+    fi
+
+    echo "$(do_stuff "$SCRIPT" "$TARGETS" 2>/dev/null)"
+}
+
+function remote_file_matches {
+    # Usage:
+    #     remote_file_matches local_file remote_file target
+    #
+    # Returns "true" or "false"
+    #
+
+    LOCAL=$1; shift
+    REMOTE=$1; shift
+    TARGET=$1
+    EXEC="md5sum $REMOTE | cut -d ' ' -f1"
+
+    MD5_LOCAL=$(md5sum $LOCAL | cut -d ' ' -f1)
+    MD5_REMOTE=$(filtered_do_stuff "$EXEC" $TARGET)
+    if [ "$DEBUG" == "yes" ]; then
+        echo "Local file MD5:  $MD5_LOCAL" 1>&2
+        echo "Remote file MD5: $MD5_REMOTE" 1>&2
+    fi
+    if [ "$MD5_LOCAL" == "$MD5_REMOTE" ]; then
+        echo "true"
+    else
+        echo "false"
+    fi
+}
+
+function remote_diff {
+    # Usage:
+    #     remote_diff local_file remote_file target
+    #
+    # Prints the diff of the local and remote file
+    #
+
+    LOCAL=$1; shift
+    REMOTE=$1; shift
+    TARGET=$1
+
+    # Get a local copy of the file
+    LOCAL_COPY="/tmp/`date +%s`"
+    if [ "$DEBUG" == "yes" ]; then
+        scp $TARGET:$REMOTE $LOCAL_COPY
+    else
+        scp $TARGET:$REMOTE $LOCAL_COPY 2>/dev/null
+    fi
+
+    diff $LOCAL $LOCAL_COPY
+    echo
+    
+    rm -f $LOCAL_COPY
+}
+
+function check_remote_files {
+    # Usage:
+    #     check_remote_files local_file remote_file targets
+    #
+    # Checks each target to see if the local file and remote file differ
+
+    LOCAL=$1; shift
+    REMOTE=$1; shift
+    TARGETS=$@
+
+    for TARGET in $TARGETS; do
+        MATCHES=$(remote_file_matches $LOCAL $REMOTE $TARGET)
+        if [ "$DEBUG" == "yes" ]; then
+            echo "Target: $TARGET" 1>&2
+            echo "Match? $MATCHES" 1>&2
+        fi
+        if [ "$MATCHES" == "true" ]; then
+            echo "$LOCAL and $TARGET:$REMOTE match"
+        else
+            echo "$LOCAL and $TARGET:$REMOTE DO NOT MATCH"
+            if [ "$DEBUG" == "yes" ]; then
+                remote_diff $LOCAL $REMOTE $TARGET
+            fi
+        fi
+    done
+}
+
+function remote_grep {
+    # Usage:
+    #     remote_grep regex remote_file target
+    # 
+    # Runs grep remotely, returns output
+
+    REGEX=$1; shift
+    REMOTE=$1; shift
+    TARGET=$1
+
+    EXEC="/bin/grep '$REGEX' $REMOTE"
+    if [ "$SUDO" == "yes" ]; then
+        EXEC="sudo $EXEC"
+    fi
+    echo "$(filtered_do_stuff $EXEC $TARGET)"
+}
+
