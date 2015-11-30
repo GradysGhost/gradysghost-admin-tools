@@ -7,3 +7,5 @@ bindkey -k k3 prev                                      # F3  | Previous Window
 bindkey -k k4 next                                      # F4  | Next Window
 bindkey -k k6 detach                                    # F6  | Detach from this session
 bindkey -k k7 copy                                      # F7  | Enter copy/scrollback mode
+
+scrollback 10000
