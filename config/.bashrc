@@ -1,10 +1,9 @@
-<<<<<<< Updated upstream
-=======
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
-# Don't put duplicate lines or lines starting with space in the history.  HISTCONTROL=ignoreboth 
->>>>>>> Stashed changes
+# Don't put duplicate lines or lines starting with space in the history.
+HISTCONTROL=ignoreboth 
+
 # History settings
 # For setting history length see HISTSIZE and HISTFILESIZE in bash(1)
 shopt -s histappend
@@ -25,15 +24,9 @@ force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-<<<<<<< Updated upstream
-  color_prompt=yes
+      color_prompt=yes
     else
-  color_prompt=
-=======
-	color_prompt=yes
-    else
-	color_prompt=
->>>>>>> Stashed changes
+      color_prompt=
     fi
 fi
 
@@ -56,23 +49,16 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 
 # Some more ls aliases
-<<<<<<< Updated upstream
-alias ll='ls -alFh'
-alias la='ls -Ah'
-alias l='ls -CFh'
-=======
 alias ll='ls -lFh'
 alias la='ls -Ah'
 alias l='ls -CFh'
 alias lathr='ls -lathr'
->>>>>>> Stashed changes
 
 # Enable bash completion
 if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
 fi
 
-<<<<<<< Updated upstream
 # Aliases
 alias ..='cd ..'
 alias git-root='while [ ! -d ./.git ]; do cd ..; done'
@@ -83,8 +69,9 @@ alias sshconf='vim ~/.ssh/config'
 alias susudio='sudo -i'
 
 # Env-vars
+export EDITOR=vim
 export PATH=${PATH}:~/bin
-=======
+
 # General aliases
 alias ..='cd ..'
 alias bashconf='vim ~/.bashrc'
@@ -111,8 +98,4 @@ alias push='git push'
 alias rebase='git rebase -i'
 alias stash='git stash'
 alias status='git status'
-
-# Env-vars
->>>>>>> Stashed changes
-export EDITOR=vim
 
