@@ -31,7 +31,7 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1="\e[0m\e[1m\e[36m[$(date +%D\ %T)] \[\e[32m\]\u@\h:\[\e[34m\]\w\[\e[91m\]\$\e[0m "
+    PS1='\[\e[0m\]\[\e[1m\]\[\e[36m\][$(date +%D\ %T)] \[\e[32m\]\u@\h:\[\e[34m\]\w\[\e[91m\]\$\[\e[0m\] '
 else
     PS1='\u@\h:\w\$ '
 fi
