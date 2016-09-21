@@ -79,7 +79,6 @@ alias pypath='export PYTHONPATH=`pwd`'
 alias rebash='source ~/.bashrc'
 alias rmpyc="find . -name '*.pyc' -print -delete"
 alias shit='sudo $(fc -ln -1)'
-alias sshbc='ssh ryan4976@build.core'
 alias sshconf='vim ~/.ssh/config'
 alias susudio='sudo -i'
 
