@@ -11,9 +11,8 @@ function warn_put_stuff {
     #  * 'targets' is a list of host systems to distribute the files in the
     #    manifest to
     #
-    # So if you want to send './files/new_sshd_config' to the staging pyweb and
-    # pyws servers, you could try warning the user first with something like
-    # this:
+    # So if you want to send './files/new_sshd_config' to some servers, you
+    # could try warning the user first with something like this:
     #
     #     MANIFEST='./files/new_sshd_config:/etc/ssh/sshd_config:root:root:0644'
     #     TARGETS=$(echo host-{1..3}.your.domain)
@@ -90,8 +89,8 @@ function put_stuff {
     #  * 'targets' is a list of host systems to distribute the files in the
     #    manifest to
     #
-    # So if you want to send './files/new_sshd_config' to the staging pyweb and
-    # pyws servers, you could try something like this:
+    # So if you want to send './files/new_sshd_config' to some servers, you
+    # could try something like this:
     #
     #     MANIFEST='./files/new_sshd_config:/etc/ssh/sshd_config:root:root:0644'
     #     TARGETS=$(echo host-{1..3}.your.domain)
@@ -126,10 +125,18 @@ function put_stuff {
             fi
 
             echo " - Set ownership of $target:$dest to $owner:$group"
-            ssh $target "chown $owner:$group $dest"
+            if [ "$SUDO" == "yes" ]; then
+                ssh -t $target "sudo chown $owner:$group $dest"
+            else
+                ssh -t $target "chown $owner:$group $dest"
+            fi
 
             echo " - Setting file mode of $target:$dest to $mode"
-            ssh $target "chmod $mode $dest"
+            if [ "$SUDO" == "yes" ]; then
+                ssh -t $target "sudo chmod $mode $dest"
+            else
+                ssh -t $target "chmod $mode $dest"
+            fi
 
         done
     done
@@ -166,13 +173,13 @@ function get_stuff {
     for t in $TARGETS; do
         if [ "$SUDO" == "yes" ]; then
             TMP_NAME="/tmp/`date +%s`"
-            ssh $t "sudo cp $REMOTE_FILE $TMP_NAME; sudo chmod 777 $TMP_NAME"
+            ssh -t $t "sudo cp $REMOTE_FILE $TMP_NAME; sudo chmod 777 $TMP_NAME"
             if [ "$VERBOSE" == "yes" ]; then
                 scp $t:$TMP_NAME ${LOCAL_PREFIX}${t}
             else
                 scp $t:$TMP_NAME ${LOCAL_PREFIX}${t} 2>/dev/null
             fi
-            ssh $t "sudo rm -f $TMP_NAME"
+            ssh -t $t "sudo rm -f $TMP_NAME"
         else
             if [ "$VERBOSE" == "yes" ]; then
                 scp $t:$REMOTE_FILE ${LOCAL_PREFIX}${t}
@@ -262,7 +269,7 @@ function do_stuff {
 
     for target in $TARGETS; do
         echo " - $target" 1>&2
-        ssh $target "$SCRIPT" 2>&1
+        ssh -t $target "$SCRIPT" 2>&1
     done
 
     echo 1>&2
@@ -332,7 +339,7 @@ function remote_diff {
 
     diff $LOCAL $LOCAL_COPY
     echo
-    
+
     rm -f $LOCAL_COPY
 }
 
@@ -366,7 +373,7 @@ function check_remote_files {
 function remote_grep {
     # Usage:
     #     remote_grep regex remote_file target
-    # 
+    #
     # Runs grep remotely, returns output
 
     REGEX=$1; shift
