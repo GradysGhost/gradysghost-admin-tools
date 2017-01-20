@@ -1,0 +1,42 @@
+#!/bin/bash
+
+if [ -z $1 ] || [ -z $2 ] || [ -z $3 ] || [ -z $4 ]; then
+  echo "Usage: s3diff <bucket> <object> <version_id_a> <version_id_b>"
+  exit 1
+fi
+
+BUCKET=$1
+KEY=$2
+A=$3; B=$4
+
+TEMP_DIR=/tmp/s3diff
+
+rm -rf $TEMP_DIR
+mkdir -p $TEMP_DIR
+
+if [[ "$A" == "@latest" ]]; then
+  aws s3 cp s3://$BUCKET/$KEY $TEMP_DIR/a &> /dev/null
+else
+  aws s3api get-object --bucket $BUCKET --key $KEY --version-id $A $TEMP_DIR/a &> /dev/null
+fi
+
+if [[ "$B" == "@latest" ]]; then
+  aws s3 cp s3://$BUCKET/$KEY $TEMP_DIR/b &> /dev/null
+else
+  aws s3api get-object --bucket $BUCKET --key $KEY --version-id $B $TEMP_DIR/b &> /dev/null
+fi
+
+if [ ! -f $TEMP_DIR/a ]; then
+  echo "Failed to get the 'a' file"
+  exit 1
+fi
+
+if [ ! -f $TEMP_DIR/b ]; then
+  echo "Failed to get the 'b' file"
+  exit 1
+fi
+
+diff -y $TEMP_DIR/{a,b}
+
+[ -z $DIRTY ] && rm -rf $TEMP_DIR
+
