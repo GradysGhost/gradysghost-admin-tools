@@ -85,6 +85,8 @@ alias susudio='sudo -i'
 # Git aliases
 alias add='git add'
 alias branch='git branch'
+alias branch-clean='git branch -d $(git branch | grep -v master)'
+alias branch-clean-force='git branch -D $(git branch | grep -v master)'
 alias checkout='git checkout'
 alias clone='git clone'
 alias commit='git commit'
