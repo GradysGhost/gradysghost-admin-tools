@@ -6,9 +6,12 @@ MAIL_TO=root@localhost
 MAIL_ON_CLEAN=0
 MAIL_ON_VIRUS=1
 MAIL_ON_ERROR=1
+LOGDIR=/var/log/clamav
 LOGFILE=/var/log/clamav/clamscan-`date +"%d%b%y"`.log
 SCAN_DIRECTORIES="/bin /boot /etc /home /lib* /mnt /opt /root /sbin /srv /usr /var"
 DETECT_STRUCTURES=0
+
+mkdir -p $LOGDIR
 
 freshclam
 
