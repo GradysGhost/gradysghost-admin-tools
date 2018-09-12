@@ -24,14 +24,14 @@ force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-      color_prompt=yes
+        color_prompt=yes
     else
-      color_prompt=
+        color_prompt=
     fi
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1='\[\e[0m\]\[\e[1m\]\[\e[36m\][$(date +%D\ %T)] \[\e[32m\]\u@\h:\[\e[34m\]\w\[\e[91m\]\$\[\e[0m\] '
+    PS1='$(~/.ps1.sh)\n> '
 else
     PS1='\u@\h:\w\$ '
 fi
@@ -61,26 +61,19 @@ fi
 
 # Aliases
 alias ..='cd ..'
-alias git-root='while [ ! -d ./.git ]; do cd ..; done'
-alias pypath='export PYTHONPATH=`pwd`'
-alias rmpyc="find . -name '*.pyc' -print -delete"
-alias shit='sudo $(fc -nl -1)'
-alias sshconf='vim ~/.ssh/config'
-alias susudio='sudo -i'
-
-# Env-vars
-export EDITOR=vim
-export PATH=${PATH}:~/bin
-
-# General aliases
-alias ..='cd ..'
 alias bashconf='vim ~/.bashrc'
+alias generate_password='apg -n16 -x32 -a1 -MSNCL -n1'
+alias generate_tokens='~/workspace/clearcare/misc-devops/scripts/get_aws_sts_token.py --user rjung --golden_config ~/.aws.conf --temp_config ~/.aws.temp.conf'
 alias pypath='export PYTHONPATH=`pwd`'
 alias rebash='source ~/.bashrc'
-alias rmpyc="find . -name '*.pyc' -print -delete"
+alias rmpyc="find . -name '__pycache__' -o -name '*.pyc' -print -exec rm -rf {} \;"
 alias shit='sudo $(fc -ln -1)'
+alias sqlite='sqlite3'
 alias sshconf='vim ~/.ssh/config'
 alias susudio='sudo -i'
+alias vpn='sudo openvpn ~/vpns/prod.ovpn'
+alias elba='export LATEST_BASE_AMI=$(ami-latest-base)'
+alias json='python -m json.tool'
 
 # Git aliases
 alias add='git add'
@@ -91,7 +84,7 @@ alias checkout='git checkout'
 alias clone='git clone'
 alias commit='git commit'
 alias fetch='git fetch'
-alias gref='git reflog -n1 2>/dev/null | cut -d " " -f1'
+alias merge='git merge'
 alias groot='while [ ! -d ./.git ]; do cd ..; done'
 alias gsd='git status; git --no-pager diff'
 alias log='git log'
@@ -100,4 +93,52 @@ alias push='git push'
 alias rebase='git rebase -i'
 alias stash='git stash'
 alias status='git status'
+
+# Env-vars
+export EDITOR=vim
+export AWS_CONFIG_FILE=~/.aws.conf
+export WORKON_HOME=~/.virtualenvs
+export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3.6
+
+export PATH=${PATH}:~/bin
+
+# Functions
+source /usr/bin/virtualenvwrapper.sh &> /dev/null
+
+function utc {
+  if [ -z $UTC ]; then
+    export UTC=0
+  fi
+
+  if [ $UTC -eq 1 ]; then
+    export UTC=0
+  else
+    export UTC=1
+  fi
+}
+
+function vim {
+  fileref=$1
+  if [[ $fileref = *":"* ]]; then
+    file=$(echo $fileref | cut -d: -f1)
+    line=$(echo $fileref | cut -d: -f2)
+    if [ -z $line ]; then
+      echo "/usr/bin/vim $@"
+      /usr/bin/vim $@
+    else
+      echo "/usr/bin/vim $file +$line"
+      /usr/bin/vim $file +$line
+    fi
+  else
+    echo "/usr/bin/vim $@"
+    /usr/bin/vim $@
+  fi
+}
+alias plainvim='/usr/bin/vim'
+
+function grepvim {
+  /usr/bin/vim $(grep -rin "$1" * | grep -v '^Binary' | cut -d: -f1 | sort -u)
+}
+
+if [ ! $TMUX ]; then tmux new; fi
 

@@ -3,7 +3,7 @@
 :set expandtab
 :set autoindent
 
-:color elflord
+:color slate
 :set cursorline
 :set cursorcolumn
 :set colorcolumn=+1
@@ -15,3 +15,6 @@ set foldmethod=indent
 set foldnestmax=10
 set nofoldenable
 set foldlevel=1
+
+set runtimepath^=~/.vim/bundle/numbers
+
