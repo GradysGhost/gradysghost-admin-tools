@@ -25,6 +25,9 @@ git_str () {
     echo ""
   else
     branch=$(git status | grep '^On branch' | sed 's/On\ branch\ \(.*\)/\1/')
+    if [ "$branch" == "" ]; then
+      branch=$(git rev-parse --short HEAD)
+    fi
     echo " ($branch)"
   fi
 }
