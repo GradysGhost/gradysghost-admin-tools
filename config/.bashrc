@@ -37,7 +37,7 @@ else
 fi
 unset color_prompt force_color_prompt
 
-# Enable color
+# Enable color on common commands
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
     alias ls='ls --color=auto'
@@ -62,8 +62,7 @@ fi
 # Aliases
 alias ..='cd ..'
 alias bashconf='vim ~/.bashrc'
-alias generate_password='apg -n16 -x32 -a1 -MSNCL -n1'
-alias generate_tokens='~/workspace/clearcare/misc-devops/scripts/get_aws_sts_token.py --user rjung --golden_config ~/.aws.conf --temp_config ~/.aws.temp.conf'
+alias generate_password='apg -n15 -x20 -a1 -MNCL -n1'
 alias pypath='export PYTHONPATH=`pwd`'
 alias rebash='source ~/.bashrc'
 alias rmpyc="find . -name '__pycache__' -o -name '*.pyc' -print -exec rm -rf {} \;"
@@ -71,8 +70,6 @@ alias shit='sudo $(fc -ln -1)'
 alias sqlite='sqlite3'
 alias sshconf='vim ~/.ssh/config'
 alias susudio='sudo -i'
-alias vpn='sudo openvpn ~/vpns/prod.ovpn'
-alias elba='export LATEST_BASE_AMI=$(ami-latest-base)'
 alias json='python -m json.tool'
 
 # Git aliases
@@ -94,13 +91,14 @@ alias rebase='git rebase -i'
 alias stash='git stash'
 alias status='git status'
 
+# wifi aliases
+alias wifi-ssid="nmcli device wifi list | grep '*' | tail -n-1 | awk '{print \$2}'"
+alias wifi-list="nmcli device wifi list"
+
 # Env-vars
 export EDITOR=vim
-export AWS_CONFIG_FILE=~/.aws.conf
 export WORKON_HOME=~/.virtualenvs
-export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3.6
-
-export PATH=${PATH}:~/bin
+export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3.7
 
 # Functions
 source /usr/bin/virtualenvwrapper.sh &> /dev/null
@@ -138,6 +136,14 @@ alias plainvim='/usr/bin/vim'
 
 function grepvim {
   /usr/bin/vim $(grep -rin "$1" * | grep -v '^Binary' | cut -d: -f1 | sort -u)
+}
+
+function tfgrep {
+  grep -rin "$@" $(find . -name '*.tf')
+}
+
+function math {
+  python3 -c "print($1)"
 }
 
 if [ ! $TMUX ]; then tmux new; fi
